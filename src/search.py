@@ -1,3 +1,7 @@
+from langchain_postgres import PGVector
+from langchain_openai import OpenAIEmbeddings
+import os
+
 PROMPT_TEMPLATE = """
 CONTEXTO:
 {contexto}
@@ -25,5 +29,20 @@ PERGUNTA DO USUÁRIO:
 RESPONDA A "PERGUNTA DO USUÁRIO"
 """
 
+
 def search_prompt(question=None):
-    pass
+    embeddings = OpenAIEmbeddings(model=os.getenv("OPENAI_EMBEDDING_MODEL"))
+    store = PGVector(
+        embeddings=embeddings,
+        collection_name=os.getenv("PG_VECTOR_COLLECTION_NAME"),
+        use_jsonb=True,
+        connection=os.getenv("DATABASE_URL"),
+    )
+
+    search_results = store.similarity_search_with_relevance_scores(question, k=10)
+
+    
+    return search_results
+
+
+
